@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 export default function PopupContent(props: { children?: ReactNode }): ReactElement {
     return (
         <Box
-            className="min-h-[400px] w-full m-0 text-left animate-[fadeInUp_0.5s_ease-out]"
+            className="min-h-[400px] w-full m-0 text-left"
             display="flex"
             flexDirection="column"
             justifyContent="flex-start"

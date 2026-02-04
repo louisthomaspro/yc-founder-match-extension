@@ -4,13 +4,13 @@
     "version": "REPLACED-BY-VITE",
     "description": "Analyze YC Startup School co-founder candidates against your ideal profile criteria",
     "icons": {
-        "34": "assets/icons/icon-34.png",
+        "32": "assets/icons/icon-32.png",
         "128": "assets/icons/icon-128.png"
     },
     "action": {
         "default_title": "YC Founder Match Settings",
         "default_popup": "src/popup/index.html",
-        "default_icon": "assets/icons/icon-34.png"
+        "default_icon": "assets/icons/icon-32.png"
     },
     "content_scripts": [
         {

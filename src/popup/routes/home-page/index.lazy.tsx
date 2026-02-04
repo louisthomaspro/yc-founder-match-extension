@@ -53,7 +53,7 @@ function HomePage(): ReactElement {
             <>
                 <PopupHeader />
                 <PopupContent>
-                    <div className="flex items-center justify-center h-full animate-[fadeIn_0.4s_ease-out]">
+                    <div className="flex items-center justify-center h-full">
                         <div className="flex flex-col items-center gap-3">
                             <div className="relative">
                                 <Loader2 className="h-8 w-8 animate-spin text-[#f06827]" />
@@ -76,7 +76,7 @@ function HomePage(): ReactElement {
             <PopupHeader />
             <PopupContent>
                 <div className="flex flex-col gap-5 w-full p-5">
-                    <Alert className="animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
+                    <Alert>
                         <AlertDescription className="text-xs leading-relaxed">
                             Configure your OpenAI API key and describe your ideal co-founder profile.
                             The extension will automatically analyze candidates on{' '}
@@ -92,7 +92,7 @@ function HomePage(): ReactElement {
                         </AlertDescription>
                     </Alert>
 
-                    <div className="space-y-2.5 animate-[fadeInUp_0.5s_ease-out_0.2s_both]">
+                    <div className="space-y-2.5">
                         <Label htmlFor="api-key" className="text-sm font-medium">OpenAI API Key</Label>
                         <Input
                             id="api-key"
@@ -106,7 +106,7 @@ function HomePage(): ReactElement {
                         </p>
                     </div>
 
-                    <div className="space-y-2.5 animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
+                    <div className="space-y-2.5">
                         <Label htmlFor="profile-criteria" className="text-sm font-medium">Ideal Co-founder Profile</Label>
                         <Textarea
                             id="profile-criteria"
@@ -127,7 +127,7 @@ function HomePage(): ReactElement {
                     <Button
                         onClick={handleSave}
                         disabled={!isValid || saving}
-                        className="w-full mt-2 animate-[fadeInUp_0.5s_ease-out_0.4s_both]"
+                        className="w-full mt-2"
                     >
                         {saving ? (
                             <>
@@ -142,20 +142,6 @@ function HomePage(): ReactElement {
                             'Save Settings'
                         )}
                     </Button>
-
-                    <div className="pt-3 border-t border-border/50 animate-[fadeInUp_0.5s_ease-out_0.5s_both]">
-                        <p className="text-xs text-center text-muted-foreground">
-                            Open source on{' '}
-                            <a
-                                href="https://github.com/louisthomaspro/yc-founder-match-extension"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[#f06827] hover:text-[#ff8c42] hover:underline transition-colors duration-200 font-medium"
-                            >
-                                GitHub
-                            </a>
-                        </p>
-                    </div>
                 </div>
             </PopupContent>
         </>

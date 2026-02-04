@@ -10,21 +10,6 @@
     animation: pulse-glow 3s ease-in-out infinite;
 }
 
-.LogoIcon::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #f06827, #ff8c42);
-    opacity: 0;
-    filter: blur(12px);
-    z-index: -2;
-    transition: opacity 0.3s ease;
-}
-
-.LogoIcon:hover::after {
-    opacity: 0.2;
-}
 
 .Title {
     margin: 0;
