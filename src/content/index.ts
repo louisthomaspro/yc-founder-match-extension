@@ -3,6 +3,7 @@ import { loadSettings } from '@/common/storage';
 
 import { extractCandidateInfo } from './domParser';
 import { removeBadge, showErrorBadge, showLoadingBadge, showResultBadge } from './highlighter';
+import './content.css';
 import styles from './styles.css?inline';
 
 let isAnalyzing = false;
@@ -27,7 +28,10 @@ async function runAnalysis(): Promise<void> {
         const settings = await loadSettings();
         
         if (!settings.openaiApiKey || !settings.profileCriteria) {
-            showErrorBadge('Please configure your API key and profile criteria in the extension popup.');
+            showErrorBadge('Please configure your API key and profile criteria in the extension popup.', () => {
+                hasAnalyzed = false;
+                runAnalysis();
+            });
             isAnalyzing = false;
             return;
         }
@@ -35,7 +39,10 @@ async function runAnalysis(): Promise<void> {
         const candidateInfo = extractCandidateInfo();
         
         if (!candidateInfo || candidateInfo.length < 50) {
-            showErrorBadge('Could not extract enough candidate information from this page.');
+            showErrorBadge('Could not extract enough candidate information from this page.', () => {
+                hasAnalyzed = false;
+                runAnalysis();
+            });
             isAnalyzing = false;
             return;
         }
@@ -60,7 +67,10 @@ async function runAnalysis(): Promise<void> {
     } catch (error) {
         console.error('[YC Founder Match] Analysis error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        showErrorBadge(errorMessage);
+        showErrorBadge(errorMessage, () => {
+            hasAnalyzed = false;
+            runAnalysis();
+        });
     } finally {
         isAnalyzing = false;
     }

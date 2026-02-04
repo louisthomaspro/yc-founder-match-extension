@@ -1,16 +1,46 @@
-.PopupLogo {
-    pointer-events: none;
-    width: 32px;
-    height: 32px;
-    padding-right: 8px;
+.LogoIcon::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f06827, #ff8c42);
+    opacity: 0.3;
+    filter: blur(8px);
+    z-index: -1;
+    animation: pulse-glow 3s ease-in-out infinite;
 }
 
-.PopupHeader {
-    background-color: #0a0f19;
-    color: #f4f4f5;
-    height: 64px;
+.LogoIcon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f06827, #ff8c42);
+    opacity: 0;
+    filter: blur(12px);
+    z-index: -2;
+    transition: opacity 0.3s ease;
+}
 
-    button {
-        color: #f4f4f5;
+.LogoIcon:hover::after {
+    opacity: 0.2;
+}
+
+.Title {
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 50%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: shimmer-text 3s ease-in-out infinite;
+}
+
+@keyframes shimmer-text {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
     }
 }

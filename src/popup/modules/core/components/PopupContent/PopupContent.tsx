@@ -2,16 +2,17 @@ import { ReactElement, ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 
-import classes from './PopupContent.module.css';
-
 export default function PopupContent(props: { children?: ReactNode }): ReactElement {
     return (
         <Box
-            className={classes.PopupContent}
+            className="min-h-[400px] w-full m-0 text-left animate-[fadeInUp_0.5s_ease-out]"
             display="flex"
             flexDirection="column"
             justifyContent="flex-start"
             alignItems="stretch"
+            sx={{
+                background: 'linear-gradient(180deg, transparent 0%, hsl(222, 47%, 11%) 100%)',
+            }}
         >
             {props.children}
         </Box>
