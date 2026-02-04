@@ -1,25 +1,106 @@
-import { ChromeMessage, ChromeMessageType } from '@/common/chrome-api-wrapper';
-import { ScraperCommand, ScraperMessage } from '@/common/types/scraper';
+import { analyzeCandidate } from '@/common/openai';
+import { loadSettings } from '@/common/storage';
 
-async function handleScrapeCommand() {
-    const pageTitle = document.title;
-    const message = new ChromeMessage(ChromeMessageType.SCRAPING_RESULTS, pageTitle);
-    await chrome.runtime.sendMessage(chrome.runtime.id, message);
+import { extractCandidateInfo } from './domParser';
+import { removeBadge, showErrorBadge, showLoadingBadge, showResultBadge } from './highlighter';
+import styles from './styles.css?inline';
+
+let isAnalyzing = false;
+let hasAnalyzed = false;
+let stylesInjected = false;
+
+function injectStyles(): void {
+    if (stylesInjected) return;
+    const styleEl = document.createElement('style');
+    styleEl.textContent = styles;
+    document.head.appendChild(styleEl);
+    stylesInjected = true;
 }
 
-chrome.runtime.onMessage.addListener((message: ChromeMessage<ScraperMessage>) => {
-    console.debug('Received message', message);
-    if (message.type !== ChromeMessageType.SCRAPER_COMMAND) {
-        return false;
+async function runAnalysis(): Promise<void> {
+    if (isAnalyzing) return;
+    
+    isAnalyzing = true;
+    showLoadingBadge();
+    
+    try {
+        const settings = await loadSettings();
+        
+        if (!settings.openaiApiKey || !settings.profileCriteria) {
+            showErrorBadge('Please configure your API key and profile criteria in the extension popup.');
+            isAnalyzing = false;
+            return;
+        }
+        
+        const candidateInfo = extractCandidateInfo();
+        
+        if (!candidateInfo || candidateInfo.length < 50) {
+            showErrorBadge('Could not extract enough candidate information from this page.');
+            isAnalyzing = false;
+            return;
+        }
+        
+        console.debug('[YC Founder Match] Analyzing candidate...');
+        console.debug('[YC Founder Match] Extracted info length:', candidateInfo.length);
+        
+        const result = await analyzeCandidate(
+            settings.openaiApiKey,
+            settings.profileCriteria,
+            candidateInfo
+        );
+        
+        console.debug('[YC Founder Match] Analysis result:', result);
+        
+        showResultBadge(result, () => {
+            hasAnalyzed = false;
+            runAnalysis();
+        });
+        
+        hasAnalyzed = true;
+    } catch (error) {
+        console.error('[YC Founder Match] Analysis error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        showErrorBadge(errorMessage);
+    } finally {
+        isAnalyzing = false;
     }
+}
 
-    if (message.payload.command === ScraperCommand.SCRAPE) {
-        handleScrapeCommand().catch(error => console.error(error));
+function init(): void {
+    const url = window.location.href;
+    const isCandidatePage = url.includes('startupschool.org/cofounder-matching/candidate/');
+    
+    if (!isCandidatePage) {
+        console.debug('[YC Founder Match] Not a candidate page, skipping');
+        return;
     }
+    
+    injectStyles();
+    console.debug('[YC Founder Match] Candidate page detected, starting analysis...');
+    
+    setTimeout(() => {
+        if (!hasAnalyzed) {
+            runAnalysis();
+        }
+    }, 1500);
+}
 
-    return false;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+let lastUrl = window.location.href;
+const observer = new MutationObserver(() => {
+    if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        hasAnalyzed = false;
+        removeBadge();
+        init();
+    }
 });
 
-console.debug('Chrome plugin content script loaded');
+observer.observe(document.body, { childList: true, subtree: true });
 
 export {};

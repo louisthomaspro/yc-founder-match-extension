@@ -9,8 +9,9 @@ export default function PopupContent(props: { children?: ReactNode }): ReactElem
         <Box
             className={classes.PopupContent}
             display="flex"
-            justifyContent="center"
-            alignItems="center"
+            flexDirection="column"
+            justifyContent="flex-start"
+            alignItems="stretch"
         >
             {props.children}
         </Box>

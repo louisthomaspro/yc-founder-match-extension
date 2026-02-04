@@ -2,88 +2,120 @@ import { ReactElement, useCallback, useEffect, useState } from 'react';
 
 import { useSnackbar } from 'notistack';
 
-import { Button, Stack } from '@mui/material';
-import Box from '@mui/material/Box';
+import {
+    Alert,
+    Button,
+    CircularProgress,
+    Stack,
+    TextField,
+    Typography
+} from '@mui/material';
 import { createLazyFileRoute } from '@tanstack/react-router';
 
-import { ChromeApiWrapper, ChromeMessage, ChromeMessageType } from '@/common/chrome-api-wrapper';
-import { ScraperCommand, ScraperMessage } from '@/common/types/scraper';
+import { loadSettings, saveSettings } from '@/common/storage';
+import { UserSettings } from '@/common/types/settings';
 import PopupContent from '@/popup/modules/core/components/PopupContent/PopupContent';
 import PopupHeader from '@/popup/modules/core/components/PopupHeader/PopupHeader';
-
-const CACHE_KEY = 'scrapedPageTitle';
 
 function HomePage(): ReactElement {
     const { enqueueSnackbar } = useSnackbar();
 
-    const [scrapedPageTitle, setScrapedPageTitle] = useState<string>('');
-    const [disableScrapeButton, setDisableScrapeButton] = useState<boolean>(false);
-
-    const scrape = useCallback(async () => {
-        setDisableScrapeButton(true);
-
-        const message: ChromeMessage<ScraperMessage> = {
-            type: ChromeMessageType.SCRAPER_COMMAND,
-            payload: { command: ScraperCommand.SCRAPE }
-        };
-
-        try {
-            await ChromeApiWrapper.sendTabMessage(message);
-        } catch (e) {
-            console.error(e);
-            enqueueSnackbar('Failed to scrape page title. Please check console logs.', {
-                variant: 'error'
-            });
-
-            setDisableScrapeButton(false);
-        }
-    }, [enqueueSnackbar]);
+    const [apiKey, setApiKey] = useState<string>('');
+    const [profileCriteria, setProfileCriteria] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [saving, setSaving] = useState<boolean>(false);
 
     useEffect(() => {
-        chrome.storage.session.get(CACHE_KEY).then(items => {
-            const cachedTitle = items[CACHE_KEY];
-            setScrapedPageTitle(cachedTitle ?? '');
+        loadSettings().then(settings => {
+            setApiKey(settings.openaiApiKey);
+            setProfileCriteria(settings.profileCriteria);
+            setLoading(false);
         });
-
-        const messageListener = (message: ChromeMessage<string>) => {
-            if (message.type !== ChromeMessageType.SCRAPING_RESULTS) {
-                return false;
-            }
-
-            chrome.storage.session.set({ [CACHE_KEY]: message.payload });
-            setScrapedPageTitle(message.payload);
-            setDisableScrapeButton(false);
-            return false;
-        };
-
-        chrome.runtime.onMessage.addListener(messageListener);
-
-        return () => {
-            chrome.runtime.onMessage.removeListener(messageListener);
-        };
     }, []);
+
+    const handleSave = useCallback(async () => {
+        setSaving(true);
+        try {
+            const settings: UserSettings = {
+                openaiApiKey: apiKey.trim(),
+                profileCriteria: profileCriteria.trim()
+            };
+            await saveSettings(settings);
+            enqueueSnackbar('Settings saved successfully!', { variant: 'success' });
+        } catch (e) {
+            console.error(e);
+            enqueueSnackbar('Failed to save settings', { variant: 'error' });
+        } finally {
+            setSaving(false);
+        }
+    }, [apiKey, profileCriteria, enqueueSnackbar]);
+
+    if (loading) {
+        return (
+            <>
+                <PopupHeader />
+                <PopupContent>
+                    <CircularProgress />
+                </PopupContent>
+            </>
+        );
+    }
+
+    const isValid = apiKey.trim() && profileCriteria.trim();
 
     return (
         <>
             <PopupHeader />
             <PopupContent>
-                <Stack alignItems="center" spacing={1}>
-                    <Box alignItems="center">
-                        <h1>My Chromium extension</h1>
-                    </Box>
+                <Stack spacing={2} sx={{ width: '100%', p: 2 }}>
+                    <Alert severity="info" sx={{ fontSize: '12px' }}>
+                        Configure your OpenAI API key and describe your ideal co-founder profile.
+                        The extension will automatically analyze candidates on Startup School.
+                    </Alert>
 
-                    <p>
-                        <strong>Scraped title:</strong> {scrapedPageTitle}
-                    </p>
+                    <TextField
+                        label="OpenAI API Key"
+                        type="password"
+                        size="small"
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                        placeholder="sk-..."
+                        fullWidth
+                        helperText="Your API key is stored locally and never shared"
+                    />
+
+                    <TextField
+                        label="Ideal Co-founder Profile"
+                        multiline
+                        rows={6}
+                        size="small"
+                        value={profileCriteria}
+                        onChange={e => setProfileCriteria(e.target.value)}
+                        placeholder={`Describe your ideal co-founder, for example:
+
+- Technical background (software engineering, ML/AI preferred)
+- 3+ years of experience in startups or tech
+- Based in US or willing to relocate
+- Interested in B2B SaaS or developer tools
+- Full-time commitment available
+- Red flags: only looking for idea validation, no coding skills`}
+                        fullWidth
+                    />
 
                     <Button
-                        className="scrape-button"
                         variant="contained"
-                        disabled={disableScrapeButton}
-                        onClick={scrape}
+                        onClick={handleSave}
+                        disabled={!isValid || saving}
+                        fullWidth
                     >
-                        Scrape page title
+                        {saving ? <CircularProgress size={20} /> : 'Save Settings'}
                     </Button>
+
+                    {isValid && (
+                        <Typography variant="caption" color="text.secondary" textAlign="center">
+                            Visit a candidate profile on Startup School to see the analysis
+                        </Typography>
+                    )}
                 </Stack>
             </PopupContent>
         </>

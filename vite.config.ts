@@ -11,12 +11,12 @@ import packageJson from './package.json';
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
-        react(),
         TanStackRouterVite({
             autoCodeSplitting: true,
             routesDirectory: path.join(__dirname, 'src/popup/routes'),
             generatedRouteTree: path.join(__dirname, 'src/popup/routeTree.gen.ts')
         }),
+        react(),
         crx({
             manifest: {
                 ...manifest,
